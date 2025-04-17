@@ -1,0 +1,227 @@
+[
+  {
+    "description": "Open Admin Signin Page",
+    "type": "OPENURL",
+    "URL": "http://20.193.143.183:4000/signin",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 2000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Enter Username",
+    "type": "INPUT",
+    "xpath": "//input[@name='email']",
+    "value": "rahulbajaj282.rb@gmail.com",
+    "subtype": "generic"
+  },
+  {
+    "description": "Enter Password",
+    "type": "INPUT",
+    "xpath": "//input[@name='password']",
+    "value": "Rahul@321",
+    "subtype": "generic"
+  },
+  {
+    "description": "Click Button",
+    "type": "CLICK",
+    "xpath": "//button[text()='sign in']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 2000,
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 2000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Click Button",
+    "type": "CLICK",
+    "xpath": "//button[text()='Dashboard Ultra']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 2000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Number of Forms",
+    "type": "CHECK_VALUE",
+    "xpath": "//span[contains(@class, 'text-blue-700') and contains(text(), 'Total Forms')]",
+    "subtype": "platform_specific"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Number of Coins",
+    "type": "CHECK_VALUE",
+    "xpath": "//span[contains(@class,'text-emerald-700')]",
+    "subtype": "platform_specific"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Navigate the existing Forms",
+    "type": "navigate_Forms",
+    "Iterations": 3,
+    "subtype": "platform_specific"
+  },
+  {
+    "description": "Click Button",
+    "type": "CLICK",
+    "xpath": "//span[text()='Create Interview']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Click Button",
+    "type": "CLICK",
+    "xpath": "//button[text()='Enter Details Manually']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Job Role",
+    "type": "INPUT",
+    "xpath": "//input[@id='jobRole']",
+    "value": "Made through Selenium",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Click Tech Stack to select from dropdown",
+    "type": "CLICK",
+    "xpath": "//div[@id='tech-stack']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Dropdown menu selection",
+    "type": "Selection",
+    "xpath": "//ul[@role='listbox']//li",
+    "Minimum_Selections": 3,
+    "subtype": "platform_specific",
+    "sub_sub_type" : "Tech Stack"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Click Skills to select from dropdown",
+    "type": "CLICK",
+    "xpath": "//div[@id='skills']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Dropdown menu selection",
+    "type": "Selection",
+    "xpath": "//ul[@role='listbox' and @aria-labelledby='skills-label']//li",
+    "Minimum_Selections": 3,
+    "subtype": "platform_specific",
+    "sub_sub_type" : "Skills"
+  },
+  {
+    "description": "Click Skills to select from dropdown",
+    "type": "CLICK",
+    "xpath": "//input[@name='controlled-radio-buttons-group']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Skills from skill pannel",
+    "type": "CLICK",
+    "xpath": "//div[@role='button' and @aria-controls='panel2-content']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Select skills from skill pannel",
+    "type": "CLICK",
+    "xpath": "//div[contains(@class, 'Mui-expanded')]//*[name()='svg'][@aria-label='Add']",
+    "subtype": "generic"
+  },
+  {
+    "description": "Select skills from skill pannel",
+    "type": "CLICK",
+    "xpath": "//div[contains(@class, 'Mui-expanded')]//*[name()='svg'][@aria-label='Add']",
+    "subtype": "generic"
+  },
+  {
+    "description": "Select skills from skill pannel",
+    "type": "CLICK",
+    "xpath": "//div[contains(@class, 'Mui-expanded')]//*[name()='svg'][@aria-label='Add']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Input File",
+    "type": "INPUT",
+    "xpath": "//input[@type='file']",
+    "value": "E:/Download/Sample_excel_sheet.xlsx",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 1000,
+    "subtype": "generic"
+  },
+  {
+    "description": "Click Skills to select from dropdown",
+    "type": "CLICK",
+    "xpath": "//button[@type='submit']",
+    "subtype": "generic"
+  },
+  {
+    "type": "WAIT",
+    "duration": 2000,
+    "subtype": "generic"
+  }
+]
