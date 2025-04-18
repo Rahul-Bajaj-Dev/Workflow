@@ -6,6 +6,7 @@ const getPostMetrics = async (req, res) => {
   try {
     const { postId } = req.params;
     params
+    params
                                                           
 
     const metrics = await Post.findById(postId).select('metrics');
