@@ -14,11 +14,9 @@ const getPostMetrics = async (req, res) => {
   }
 };
 
-const updateMetrics = async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const { metric, value } = req.body;
-    
+post
+error
+
                                                  
 
     await Post.findByIdAndUpdate(postId, {

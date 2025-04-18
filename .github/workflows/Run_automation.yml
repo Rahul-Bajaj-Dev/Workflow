@@ -11,6 +11,11 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
+      - name: Extract PR Info
+        run: |
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "Merged From Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Merged Into Branch: ${{ github.event.pull_request.base.ref }}"
 
       - name: Extract PR Info
         run: |
@@ -25,7 +30,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
                   "properties": {},
-                  "routing_key": "Automation-Workflow-Queue",
+                  "routing_key": "Automation-test",
                   "payload": "PR #${{ github.event.pull_request.number }} from branch ${{ github.head_ref }}",
                   "payload_encoding": "string"
                 }' \
@@ -50,7 +55,7 @@ jobs:
           attempt=0
           while [ $attempt -lt $max_attempt ]; do
             echo "Polling attempt: $((attempt + 1))..."
-            
+
             response1=$(curl -s "https://sincere-deep-goat.ngrok-free.app/webhook/workflow_status")
             echo "Polling response: $response1"
 
@@ -75,7 +80,11 @@ jobs:
             exit 1
           fi
 
-      # Step 5: Call webhook to initiate check
+      # Step 3: Checkout the PR code
+      - name: Checkout the PR code
+        uses: actions/checkout@v3
+
+      # Step 4: Call webhook to initiate check
       - name: Call webhook to initiate check
         id: initiate-webhook
         run: |
@@ -86,19 +95,19 @@ jobs:
           echo "Pull Request Link: $PR_LINK"
           echo "Branch Name: $BRANCH_NAME"
           echo "Commit Author: $COMMIT_USERNAME"
-        
+
           response=$(curl -s -X POST -H "Content-Type: application/json" \
             -d "{\"action\": \"check\", \
                   \"Pull Request Link\": \"$PR_LINK\", \
                   \"Branch Name\": \"$BRANCH_NAME\", \
                   \"Commit Author\": \"$COMMIT_USERNAME\"}" \
             "https://sincere-deep-goat.ngrok-free.app/webhook/github-webhook")
-          
+
           echo "response=$response" >> $GITHUB_ENV
           echo "Polling for result..."
           sleep 100
 
-      # Step 6: Poll for Completion of Automation
+      # Step 5: Poll for Completion of test result
       - name: Poll for Completion of test result
         id: poll-webhook
         run: |
