@@ -25,7 +25,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
                   "properties": {},
-                  "routing_key": "Automation-Workflow-Queue",
+                  "routing_key": "Automation-test",
                   "payload": "PR #${{ github.event.pull_request.number }} from branch ${{ github.head_ref }}",
                   "payload_encoding": "string"
                 }' \
