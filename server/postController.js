@@ -7,7 +7,10 @@ const createPost = async (req, res) => {
     let mediaUrls = [];
 
     if (req.files) {
-                                     
+
+
+
+      const
 
       const file = req.files[req.files.length - 1];
       const uploadResult = await uploadToStorage(file);
