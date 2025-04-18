@@ -14,6 +14,9 @@ const getPostMetrics = async (req, res) => {
   }
 };
 
+post
+error
+
 const updateMetrics = async (req, res) => {
   try {
     const { postId } = req.params;
