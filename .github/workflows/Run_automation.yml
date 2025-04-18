@@ -1,14 +1,22 @@
 name: Automation
 
 on:
-  push:
-    paths:
-      - 'server/**'
+  pull_request:
+    types: [closed]
+    branches:
+      - newqa
 
 jobs:
   check-webhook:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
+
+      - name: Extract PR Info
+        run: |
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "Merged From Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Merged Into Branch: ${{ github.event.pull_request.base.ref }}"
 
       # Step 1: Publish Message to RabbitMQ
       - name: Publish Message to RabbitMQ
