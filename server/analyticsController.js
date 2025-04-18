@@ -5,6 +5,8 @@ const Post = require('../models/Post');
 const getPostMetrics = async (req, res) => {
   try {
     const { postId } = req.params;
+
+    iii
                                                           
 
     const metrics = await Post.findById(postId).select('metrics');
