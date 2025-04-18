@@ -107,14 +107,13 @@ jobs:
           echo "Polling for result..."
           sleep 100
 
-      # Step 5: Poll for Completion of test result
+           # Step 5: Poll for Completion of test result
       - name: Poll for Completion of test result
         id: poll-webhook
         run: |
           max_attempts=60
           delay=30
           attempt=0
-          result="pending"
 
           while [ $attempt -lt $max_attempts ]; do
             echo "Polling attempt: $((attempt + 1))..."
@@ -123,14 +122,9 @@ jobs:
 
             response_cleaned=$(echo "$response" | tr -d '[:space:]')
 
-            if [[ "$response_cleaned" == *"mergeable:true"* ]]; then
-              echo "mergeable=true"
-              echo "Result is mergeable."
+            if [[ "$response_cleaned" == "1" ]]; then
+              echo "Automation returned 1. Proceeding..."
               exit 0
-            elif [[ "$response_cleaned" == *"mergeable:false"* ]]; then
-              echo "mergeable=false"
-              echo "Result is not mergeable."
-              exit 1
             elif [[ -z "$response_cleaned" ]]; then
               echo "Empty response received, retrying..."
             else
@@ -141,5 +135,5 @@ jobs:
             attempt=$((attempt + 1))
           done
 
-          echo "Timeout reached. Mergeability check did not complete."
+          echo "Timeout reached. Automation did not return 1."
           exit 1
