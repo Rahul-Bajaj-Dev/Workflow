@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
                                                           
 
 const postSchema = new mongoose.Schema({
+  schema
   content: { type: String, required: true },
   mediaUrls: [String],
   scheduledTime: { type: Date, required: true },
