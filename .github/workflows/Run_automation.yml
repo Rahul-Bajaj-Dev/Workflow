@@ -1,0 +1,136 @@
+name: Automation
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - test1
+
+jobs:
+  check-webhook:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Extract PR Info
+        run: |
+          echo "PR Number: ${{ github.event.pull_request.number }}"
+          echo "Merged From Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "Merged Into Branch: ${{ github.event.pull_request.base.ref }}"
+
+      # Step 1: Publish Message to RabbitMQ
+      - name: Publish Message to RabbitMQ
+        run: |
+          response=$(curl -u ${{ secrets.RABBITMQ_USER }}:${{ secrets.RABBITMQ_PASS }} \
+            -H "Content-Type: application/json" \
+            -d '{
+                  "properties": {},
+                  "routing_key": "Automation-Workflow-Queue",
+                  "payload": "PR #${{ github.event.pull_request.number }} from branch ${{ github.head_ref }}",
+                  "payload_encoding": "string"
+                }' \
+            -w "%{http_code}" -o response.txt \
+            "${{ secrets.RABBITMQ_URL }}/api/exchanges/%2f/amq.default/publish")
+          if [[ "$response" -eq 200 ]]; then 
+            echo "Message Published Successfully"
+          else
+            echo "Message not published successfully. HTTP Status Code: $response"
+            exit 1
+          fi
+
+      # Step 2: Polling for resuming the workflow
+      - name: Polling for resuming the workflow
+        run: |
+          max_attempt=60
+          delay=60
+          workflow="waiting"
+          PR_Number=${{ github.event.pull_request.number }}
+          Branch_Name=${{ github.head_ref }}
+
+          attempt=0
+          while [ $attempt -lt $max_attempt ]; do
+            echo "Polling attempt: $((attempt + 1))..."
+            
+            response1=$(curl -s "https://sincere-deep-goat.ngrok-free.app/webhook/workflow_status")
+            echo "Polling response: $response1"
+
+            prNumberFromResponse=$(echo "$response1" | jq -r '.PR_Number')
+            branchNameFromResponse=$(echo "$response1" | jq -r '.Branch')
+
+            if [[ "$prNumberFromResponse" == "$PR_Number" && "$branchNameFromResponse" == "$Branch_Name" ]]; then
+              echo "PR Number and Branch match, waiting for the post cleanup job and resuming workflow in 60 seconds."
+              sleep 60
+              workflow="resumed"
+              break
+            else
+              echo "PR Number and Branch do not match, retrying..."
+            fi
+
+            sleep $delay
+            attempt=$((attempt + 1))
+          done
+
+          if [[ "$workflow" != "resumed" ]]; then
+            echo "PR Number and Branch did not match after $max_attempt attempts."
+            exit 1
+          fi
+
+      # Step 5: Call webhook to initiate check
+      - name: Call webhook to initiate check
+        id: initiate-webhook
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_LINK="https://github.com/${{ github.repository }}/pull/$PR_NUMBER"
+          BRANCH_NAME=${{ github.head_ref }}
+          COMMIT_USERNAME=$(git log -1 --pretty=format:'%an')
+          echo "Pull Request Link: $PR_LINK"
+          echo "Branch Name: $BRANCH_NAME"
+          echo "Commit Author: $COMMIT_USERNAME"
+        
+          response=$(curl -s -X POST -H "Content-Type: application/json" \
+            -d "{\"action\": \"check\", \
+                  \"Pull Request Link\": \"$PR_LINK\", \
+                  \"Branch Name\": \"$BRANCH_NAME\", \
+                  \"Commit Author\": \"$COMMIT_USERNAME\"}" \
+            "https://sincere-deep-goat.ngrok-free.app/webhook/github-webhook")
+          
+          echo "response=$response" >> $GITHUB_ENV
+          echo "Polling for result..."
+          sleep 100
+
+      # Step 6: Poll for Completion of Automation
+      - name: Poll for Completion of test result
+        id: poll-webhook
+        run: |
+          max_attempts=60
+          delay=30
+          attempt=0
+          result="pending"
+
+          while [ $attempt -lt $max_attempts ]; do
+            echo "Polling attempt: $((attempt + 1))..."
+            response=$(curl -s "https://sincere-deep-goat.ngrok-free.app/webhook/status")
+            echo "Polling response: $response"
+
+            response_cleaned=$(echo "$response" | tr -d '[:space:]')
+
+            if [[ "$response_cleaned" == *"mergeable:true"* ]]; then
+              echo "mergeable=true"
+              echo "Result is mergeable."
+              exit 0
+            elif [[ "$response_cleaned" == *"mergeable:false"* ]]; then
+              echo "mergeable=false"
+              echo "Result is not mergeable."
+              exit 1
+            elif [[ -z "$response_cleaned" ]]; then
+              echo "Empty response received, retrying..."
+            else
+              echo "Result not ready, waiting..."
+            fi
+
+            sleep $delay
+            attempt=$((attempt + 1))
+          done
+
+          echo "Timeout reached. Mergeability check did not complete."
+          exit 1
