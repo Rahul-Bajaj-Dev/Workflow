@@ -11,11 +11,6 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Extract PR Info
-        run: |
-          echo "PR Number: ${{ github.event.pull_request.number }}"
-          echo "Merged From Branch: ${{ github.event.pull_request.head.ref }}"
-          echo "Merged Into Branch: ${{ github.event.pull_request.base.ref }}"
 
       - name: Extract PR Info
         run: |
@@ -107,7 +102,7 @@ jobs:
           echo "Polling for result..."
           sleep 100
 
-           # Step 5: Poll for Completion of test result
+      # Step 5: Poll for Completion of test result
       - name: Poll for Completion of test result
         id: poll-webhook
         run: |
@@ -120,13 +115,13 @@ jobs:
             response=$(curl -s "https://sincere-deep-goat.ngrok-free.app/webhook/status")
             echo "Polling response: $response"
 
-            response_cleaned=$(echo "$response" | tr -d '[:space:]')
+            status=$(echo "$response" | jq -r '.status')
 
-            if [[ "$response_cleaned" == "1" ]]; then
+            if [[ "$status" == "1" ]]; then
               echo "Automation returned 1. Proceeding..."
               exit 0
-            elif [[ -z "$response_cleaned" ]]; then
-              echo "Empty response received, retrying..."
+            elif [[ -z "$status" ]]; then
+              echo "Empty status received, retrying..."
             else
               echo "Result not ready, waiting..."
             fi
