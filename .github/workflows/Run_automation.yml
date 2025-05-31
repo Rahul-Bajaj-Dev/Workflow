@@ -56,7 +56,7 @@ jobs:
             branchNameFromResponse=$(echo "$response1" | jq -r '.Branch')
             commitShaFromResponse=$(echo "$response1" | jq -r '.Commit_SHA')
 
-            if [[ "$branchNameFromResponse" == "$Branch_Name" && "$commitShaFromResponse" == "$Commit_SHA" ]]; then
+            if [[ "$branchNameFromResponse" == "$Branch_Name" || "$commitShaFromResponse" == "$Commit_SHA" ]]; then
               echo "Branch and Commit SHA match, waiting for post cleanup job and resuming workflow in 60 seconds."
               sleep 60
               workflow="resumed"
