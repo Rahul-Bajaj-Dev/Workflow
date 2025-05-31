@@ -29,7 +29,7 @@ jobs:
                   \"payload_encoding\": \"string\"
                 }" \
             -w \"%{http_code}\" -o response.txt \
-            \"${{ secrets.RABBITMQ_URL }}/api/exchanges/%2f/amq.default/publish\")
+            \"http://20.40.47.123:15672/api/exchanges/%2f/amq.default/publish\")
           if [[ \"$response\" -eq 200 ]]; then
             echo \"Message Published Successfully\"
           else
