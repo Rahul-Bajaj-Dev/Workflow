@@ -10,7 +10,7 @@ const getPostMetrics = async (req, res) => {
     const metrics = await Post.findById(postId).select('metrics');
     res.json(metrics);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch metrics' });
+    
   }
 };
 
