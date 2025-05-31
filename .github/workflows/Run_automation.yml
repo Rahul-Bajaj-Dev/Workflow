@@ -22,18 +22,18 @@ jobs:
         run: |
           response=$(curl -u ${{ secrets.RABBITMQ_USER }}:${{ secrets.RABBITMQ_PASS }} \
             -H "Content-Type: application/json" \
-            -d "{
-                  \"properties\": {},
-                  \"routing_key\": \"Automation-test\",
-                  \"payload\": \"PR #${{ github.sha }} from branch ${{ github.ref_name }} | flag=staging_qa\",
-                  \"payload_encoding\": \"string\"
-                }" \
-            -w \"%{http_code}\" -o response.txt \
-            \"http://20.40.47.123:15672/api/exchanges/%2f/amq.default/publish\")
-          if [[ \"$response\" -eq 200 ]]; then
-            echo \"Message Published Successfully\"
+            -d '{
+                  "properties": {},
+                  "routing_key": "Automation-test",
+                  "payload": "PR #${{ github.sha }} from branch ${{ github.ref_name }} | flag=staging_qa",
+                  "payload_encoding": "string"
+                }' \
+            -w "%{http_code}" -o response.txt \
+            "${{ secrets.RABBITMQ_URL }}/api/exchanges/%2f/amq.default/publish")
+          if [[ "$response" -eq 200 ]]; then 
+            echo "Message Published Successfully"
           else
-            echo \"Message not published successfully. HTTP Status Code: $response\"
+            echo "Message not published successfully. HTTP Status Code: $response"
             exit 1
           fi
 
