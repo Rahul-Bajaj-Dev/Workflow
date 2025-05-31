@@ -3,7 +3,7 @@ name: Automation
 on:
   push:
     branches:
-      - test3
+      - test4
 
 jobs:
   check-webhook:
