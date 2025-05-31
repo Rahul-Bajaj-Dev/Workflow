@@ -1,40 +1,39 @@
 name: Automation
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches:
-      - test1
+      - test3
 
 jobs:
   check-webhook:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
 
-      - name: Extract PR Info
+      - name: Extract Push Info
         run: |
-          echo "PR Number: ${{ github.event.pull_request.number }}"
-          echo "Merged From Branch: ${{ github.event.pull_request.head.ref }}"
-          echo "Merged Into Branch: ${{ github.event.pull_request.base.ref }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Branch Name: ${{ github.ref_name }}"
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Pusher: ${{ github.actor }}"
 
       # Step 1: Publish Message to RabbitMQ
       - name: Publish Message to RabbitMQ
         run: |
           response=$(curl -u ${{ secrets.RABBITMQ_USER }}:${{ secrets.RABBITMQ_PASS }} \
             -H "Content-Type: application/json" \
-            -d '{
-                  "properties": {},
-                  "routing_key": "Automation-test",
-                  "payload": "PR #${{ github.event.pull_request.number }} from branch ${{ github.head_ref }}",
-                  "payload_encoding": "string"
-                }' \
-            -w "%{http_code}" -o response.txt \
-            "${{ secrets.RABBITMQ_URL }}/api/exchanges/%2f/amq.default/publish")
-          if [[ "$response" -eq 200 ]]; then 
-            echo "Message Published Successfully"
+            -d "{
+                  \"properties\": {},
+                  \"routing_key\": \"Automation-test\",
+                  \"payload\": \"PR #${{ github.sha }} from branch ${{ github.ref_name }} | flag=staging_qa\",
+                  \"payload_encoding\": \"string\"
+                }" \
+            -w \"%{http_code}\" -o response.txt \
+            \"${{ secrets.RABBITMQ_URL }}/api/exchanges/%2f/amq.default/publish\")
+          if [[ \"$response\" -eq 200 ]]; then
+            echo \"Message Published Successfully\"
           else
-            echo "Message not published successfully. HTTP Status Code: $response"
+            echo \"Message not published successfully. HTTP Status Code: $response\"
             exit 1
           fi
 
@@ -44,26 +43,26 @@ jobs:
           max_attempt=60
           delay=60
           workflow="waiting"
-          PR_Number=${{ github.event.pull_request.number }}
-          Branch_Name=${{ github.head_ref }}
+          Branch_Name=${{ github.ref_name }}
+          Commit_SHA=${{ github.sha }}
 
           attempt=0
           while [ $attempt -lt $max_attempt ]; do
             echo "Polling attempt: $((attempt + 1))..."
 
-            response1=$(curl -s "https://sincere-deep-goat.ngrok-free.app/webhook/workflow_status")
+            response1=$(curl -s "https://2929-2405-201-4041-182c-29b9-407b-3fb0-58a1.ngrok-free.app/webhook/workflow_status")
             echo "Polling response: $response1"
 
-            prNumberFromResponse=$(echo "$response1" | jq -r '.PR_Number')
             branchNameFromResponse=$(echo "$response1" | jq -r '.Branch')
+            commitShaFromResponse=$(echo "$response1" | jq -r '.Commit_SHA')
 
-            if [[ "$prNumberFromResponse" == "$PR_Number" && "$branchNameFromResponse" == "$Branch_Name" ]]; then
-              echo "PR Number and Branch match, waiting for the post cleanup job and resuming workflow in 60 seconds."
+            if [[ "$branchNameFromResponse" == "$Branch_Name" && "$commitShaFromResponse" == "$Commit_SHA" ]]; then
+              echo "Branch and Commit SHA match, waiting for post cleanup job and resuming workflow in 60 seconds."
               sleep 60
               workflow="resumed"
               break
             else
-              echo "PR Number and Branch do not match, retrying..."
+              echo "Branch and Commit SHA do not match, retrying..."
             fi
 
             sleep $delay
@@ -71,32 +70,33 @@ jobs:
           done
 
           if [[ "$workflow" != "resumed" ]]; then
-            echo "PR Number and Branch did not match after $max_attempt attempts."
+            echo "Branch and Commit SHA did not match after $max_attempt attempts."
             exit 1
           fi
 
-      # Step 3: Checkout the PR code
-      - name: Checkout the PR code
+      # Step 3: Checkout the pushed code
+      - name: Checkout the code
         uses: actions/checkout@v3
 
       # Step 4: Call webhook to initiate check
       - name: Call webhook to initiate check
         id: initiate-webhook
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          PR_LINK="https://github.com/${{ github.repository }}/pull/$PR_NUMBER"
-          BRANCH_NAME=${{ github.head_ref }}
-          COMMIT_USERNAME=$(git log -1 --pretty=format:'%an')
-          echo "Pull Request Link: $PR_LINK"
+          BRANCH_NAME=${{ github.ref_name }}
+          COMMIT_SHA=${{ github.sha }}
+          COMMIT_USERNAME=${{ github.actor }}
+
           echo "Branch Name: $BRANCH_NAME"
+          echo "Commit SHA: $COMMIT_SHA"
           echo "Commit Author: $COMMIT_USERNAME"
 
           response=$(curl -s -X POST -H "Content-Type: application/json" \
             -d "{\"action\": \"check\", \
-                  \"Pull Request Link\": \"$PR_LINK\", \
+                  \"Pull Request Link\": \"N/A - push event\", \
                   \"Branch Name\": \"$BRANCH_NAME\", \
-                  \"Commit Author\": \"$COMMIT_USERNAME\"}" \
-            "https://sincere-deep-goat.ngrok-free.app/webhook/github-webhook")
+                  \"Commit Author\": \"$COMMIT_USERNAME\", \
+                  \"Flag\": \"staging_qa\"}" \
+            "https://2929-2405-201-4041-182c-29b9-407b-3fb0-58a1.ngrok-free.app/webhook/github-webhook")
 
           echo "response=$response" >> $GITHUB_ENV
           echo "Polling for result..."
@@ -112,23 +112,40 @@ jobs:
 
           while [ $attempt -lt $max_attempts ]; do
             echo "Polling attempt: $((attempt + 1))..."
-            response=$(curl -s "https://sincere-deep-goat.ngrok-free.app/webhook/status")
+            response=$(curl -s "https://2929-2405-201-4041-182c-29b9-407b-3fb0-58a1.ngrok-free.app/webhook/status")
             echo "Polling response: $response"
 
             status=$(echo "$response" | jq -r '.status')
 
-            if [[ "$status" == "1" ]]; then
-              echo "Automation returned 1. Proceeding..."
+            if [[ "$status" == "pass" ]]; then
+              echo "Status is pass. Proceeding..."
               exit 0
-            elif [[ -z "$status" ]]; then
-              echo "Empty status received, retrying..."
+            elif [[ "$status" == "fail" ]]; then
+              echo "Status is fail. Exiting with error."
+              exit 1
             else
-              echo "Result not ready, waiting..."
+              echo "Result not ready or unknown status, waiting..."
             fi
 
             sleep $delay
             attempt=$((attempt + 1))
           done
 
-          echo "Timeout reached. Automation did not return 1."
+          echo "Timeout reached. Automation did not return pass or fail."
           exit 1
+
+      # Step 6: Deploy to Azure Staging
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and deploy Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}
+          acrName: datalayeracr
+          containerAppName: datalayer-staging
+          resourceGroup: hyrr
+          imageToBuild: datalayeracr.azurecr.io/staging:${{ github.sha }}
+          imageToDeploy: datalayeracr.azurecr.io/staging:${{ github.sha }}
