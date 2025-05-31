@@ -29,4 +29,3 @@ error
   }
 };
 
-module.exports = { getPostMetrics, updateMetrics };
