@@ -5,7 +5,7 @@ const Post = require('../models/Post');
 const getPostMetrics = async (req, res) => {
   try {
     const { postId } = req.params;
-                                                          
+                                   this a test                       
 
     const metrics = await Post.findById(postId).select('metrics');
     res.json(metrics);
@@ -29,4 +29,3 @@ error
   }
 };
 
-module.exports = { getPostMetrics, updateMetrics };
