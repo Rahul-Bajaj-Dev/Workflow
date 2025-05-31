@@ -95,7 +95,7 @@ jobs:
             -d "{\"action\": \"check\", \
                   \"Pull Request Link\": \"$PR_LINK\", \
                   \"Branch Name\": \"$BRANCH_NAME\", \
-                  \"Commit Author\": \"$COMMIT_USERNAME\"}" \
+                  \"Commit Author\": \"$COMMIT_USERNAME\", \
                   \"Flag\": \"qa\"}" \
             "https://2929-2405-201-4041-182c-29b9-407b-3fb0-58a1.ngrok-free.app/webhook/github-webhook")
 
